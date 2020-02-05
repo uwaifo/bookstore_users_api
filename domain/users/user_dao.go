@@ -3,6 +3,7 @@ package users
 import (
 	"fmt"
 
+	"github.com/uwaifo/bookstore_users_api/utils"
 	"github.com/uwaifo/bookstore_users_api/utils/errors"
 )
 
@@ -23,6 +24,7 @@ func (user *User) Get() *errors.RestErr {
 	user.FirstName = result.FirstName
 	user.LastName = result.LastName
 	user.Email = result.Email
+	user.DateCreated = result.DateCreated
 
 	return nil
 
@@ -38,8 +40,10 @@ func (user *User) Save() *errors.RestErr {
 		return errors.NewBadRequest(fmt.Sprintf("user %d already exists", user.ID))
 
 	}
+	user.DateCreated = utils.GetNowString()
+	//now := time.Now()
+	//user.DateCreated = now.Format("02-01-2006T15:04:05Z")
 	userDB[user.ID] = user
-
 	return nil
 
 }

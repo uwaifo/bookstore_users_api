@@ -15,8 +15,18 @@ type User struct {
 	DateCreated string `json:"date_created"`
 }
 
-//function style
+//Validate method style
+func (user *User) Validate() *errors.RestErr {
+	user.Email = strings.TrimSpace(strings.ToLower((user.Email)))
+	if user.Email == "" {
+		return errors.NewBadRequest("invalid email addres")
+	}
+	return nil
+}
+
 /*
+//function style
+
 func Validate(user *User) *errors.RestErr {
 	use.Email = string.TrimSpace(strings.Tolower(user.Email))
 	if user.Email == "" {
@@ -26,11 +36,3 @@ func Validate(user *User) *errors.RestErr {
 
 }
 */
-//method style
-func (user *User) Validate() *errors.RestErr {
-	user.Email = strings.TrimSpace(strings.ToLower((user.Email)))
-	if user.Email == "" {
-		return errors.NewBadRequest("invalid email addres")
-	}
-	return nil
-}
