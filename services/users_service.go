@@ -36,3 +36,39 @@ func GetUser(userID int64) (*users.User, *errors.RestErr) {
 	return result, nil
 
 }
+
+//UpdateUser . . . .
+func UpdateUser(isPartial bool, user users.User) (*users.User, *errors.RestErr) {
+	currentUser, err := GetUser(user.ID)
+	if err != nil {
+		return nil, err
+	}
+	//noneed to validate since that is a constraint in the database
+	/*
+		if err := user.Validate(); err != nil {
+			return nil, err
+		}
+	*/
+	if isPartial {
+		if user.FirstName != "" {
+			currentUser.FirstName = user.FirstName
+		}
+		if user.LastName != "" {
+			currentUser.LastName = user.LastName
+		}
+		if user.Email != "" {
+			currentUser.Email = user.Email
+		}
+
+	} else {
+		currentUser.FirstName = user.FirstName
+		currentUser.LastName = user.LastName
+		currentUser.Email = user.Email
+
+	}
+
+	if err := currentUser.Update(); err != nil {
+		return nil, err
+	}
+	return currentUser, nil
+}
