@@ -11,6 +11,16 @@ import (
 	"github.com/uwaifo/bookstore_users_api/utils/errors"
 )
 
+//get a user by id
+func getUserID(userIDParam string) (int64, *errors.RestErr) {
+	userID, userErr := strconv.ParseInt(userIDParam, 10, 64)
+	if userErr != nil {
+		return 0, errors.NewBadRequest("user id should be a number")
+	}
+	return userID, nil
+
+}
+
 //CreateUser . .
 func CreateUser(c *gin.Context) {
 	var user users.User
@@ -33,12 +43,20 @@ func CreateUser(c *gin.Context) {
 //GetUser . .
 func GetUser(c *gin.Context) {
 
-	userID, userErr := strconv.ParseInt(c.Param("user_id"), 10, 64)
-	if userErr != nil {
-		err := errors.NewBadRequest("invalid user id")
-		c.JSON(err.Status, err)
+	userID, idErr := getUserID(c.Param("user_id"))
+	if idErr != nil {
+		c.JSON(idErr.Status, idErr)
 		return
 	}
+
+	/*
+		userID, userErr := strconv.ParseInt(c.Param("user_id"), 10, 64)
+		if userErr != nil {
+			err := errors.NewBadRequest("invalid user id")
+			c.JSON(err.Status, err)
+			return
+		}
+	*/
 
 	user, getErr := services.GetUser(userID)
 	if getErr != nil {
@@ -53,12 +71,19 @@ func GetUser(c *gin.Context) {
 //UpdateUser . .
 func UpdateUser(c *gin.Context) {
 	//Do the same body parsing and validation as in GetUser function
-	userID, userErr := strconv.ParseInt(c.Param("user_id"), 10, 64)
-	if userErr != nil {
-		err := errors.NewBadRequest("invalid user id")
-		c.JSON(err.Status, err)
+	userID, idErr := getUserID(c.Param("user_id"))
+	if idErr != nil {
+		c.JSON(idErr.Status, idErr)
 		return
 	}
+	/*
+		userID, userErr := strconv.ParseInt(c.Param("user_id"), 10, 64)
+		if userErr != nil {
+			err := errors.NewBadRequest("invalid user id")
+			c.JSON(err.Status, err)
+			return
+		}
+	*/
 	//same as in SaveUser
 	var user users.User
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -80,6 +105,29 @@ func UpdateUser(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, result)
 	fmt.Println(result)
+
+}
+
+//Delete . .. .
+func Delete(c *gin.Context) {
+	userID, idErr := getUserID(c.Param("user_id"))
+	if idErr != nil {
+		c.JSON(idErr.Status, idErr)
+		return
+	}
+	if err := services.DeleteUser(userID); err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	/*VERY IMPORTANT TO RETURN THE SAME CONTENT TYPE IN
+	SUCCESS AS IN ERRORS
+	IE. if we return c.JSON... for failure we can not later use
+	 c.String for success becouse we realize we not have a payload
+	 They must be the same.
+
+	*/
+
+	c.JSON(http.StatusOK, map[string]string{"status": "deleted"})
 
 }
 

@@ -17,6 +17,7 @@ const (
 	queryInsertUser  = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?);"
 	queryGetUser     = "SELECT id, first_name, last_name, email, date_created FROM users WHERE id=?;"
 	queryUdpdateUser = "UPDATE users SET first_name=?, last_name=?, email=? WHERE id=?"
+	queryDeleteUser  = "DELETE FROM users WHERE id=?;"
 	errorNoRows      = "no rows in result set"
 )
 
@@ -62,6 +63,24 @@ func (user *User) Update() *errors.RestErr {
 		return errors.ParseError(err)
 
 	}
+	return nil
+
+}
+
+//Delete  . . .
+func (user *User) Delete() *errors.RestErr {
+	//prepare and execute the delete query
+	stmt, err := usersdb.Client.Prepare(queryDeleteUser)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
+	}
+	defer stmt.Close()
+
+	//
+	if _, err = stmt.Exec(user.ID); err != nil {
+		return errors.ParseError(err)
+	}
+
 	return nil
 
 }
