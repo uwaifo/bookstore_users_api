@@ -6,19 +6,19 @@ import (
 	"strings"
 
 	"github.com/uwaifo/bookstore_users_api/datasource/mysql/usersdb"
-	"github.com/uwaifo/bookstore_users_api/utils"
 	"github.com/uwaifo/bookstore_users_api/utils/errors"
 )
 
 //used for interacting with the database
 
 const (
-	indexUniqueEmail = "email_UNIQUE"
-	queryInsertUser  = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?);"
-	queryGetUser     = "SELECT id, first_name, last_name, email, date_created FROM users WHERE id=?;"
-	queryUdpdateUser = "UPDATE users SET first_name=?, last_name=?, email=? WHERE id=?"
-	queryDeleteUser  = "DELETE FROM users WHERE id=?;"
-	errorNoRows      = "no rows in result set"
+	indexUniqueEmail  = "email_UNIQUE"
+	queryInsertUser   = "INSERT INTO users(first_name, last_name, email, date_created, password, status) VALUES(?, ?, ?, ?, ?, ?);"
+	queryGetUser      = "SELECT id, first_name, last_name, email, date_created FROM users WHERE id=?;"
+	queryUdpdateUser  = "UPDATE users SET first_name=?, last_name=?, email=? WHERE id=?"
+	queryDeleteUser   = "DELETE FROM users WHERE id=?;"
+	queryUserByStatus = "SELECT id, first_name,last_name, email, date_created, status FROM users WHERE status=?;"
+	errorNoRows       = "no rows in result set"
 )
 
 /*var (
@@ -94,9 +94,9 @@ func (user *User) Save() *errors.RestErr {
 	//very important to defer and cloe statement if we have an error
 	defer stmt.Close()
 
-	user.DateCreated = utils.GetNowString()
+	//user.DateCreated = utils.GetNowString()
 
-	insertResult, saveErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated)
+	insertResult, saveErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated, user.Password, user.Status)
 
 	if saveErr != nil {
 		return errors.ParseError(saveErr)
@@ -131,5 +131,38 @@ func (user *User) Save() *errors.RestErr {
 	*/
 	user.ID = userID
 	return nil
+
+}
+
+//FindByStatus method . . . .
+func (user *User) FindByStatus(status string) ([]User, *errors.RestErr) {
+
+	stmt, err := usersdb.Client.Prepare(queryUserByStatus)
+	if err != nil {
+		return nil, errors.NewInternalServerError(err.Error())
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(status)
+	if err != nil {
+		return nil, errors.NewInternalServerError(err.Error())
+
+	}
+
+	defer rows.Close()
+
+	results := make([]User, 0)
+	for rows.Next() {
+		var user User
+		if err := rows.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated, &user.Status); err != nil {
+			return nil, errors.ParseError(err)
+		}
+		results = append(results, user)
+	}
+
+	if len(results) == 0 {
+		return nil, errors.NewNotFoundError((fmt.Sprintf("no users matching status %s", status)))
+	}
+	return results, nil
 
 }

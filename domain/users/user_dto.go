@@ -6,6 +6,11 @@ import (
 	"github.com/uwaifo/bookstore_users_api/utils/errors"
 )
 
+//
+const (
+	StatusActive = "active"
+)
+
 //User domain entity definition
 type User struct {
 	ID          int64  `json:"id"`
@@ -14,8 +19,12 @@ type User struct {
 	Email       string `json:"email"`
 	DateCreated string `json:"date_created"`
 	Status      string `json:"status"`
-	Password    string `json:"-"`
+	Password    string `json:"password"` // makes it an internal field
 }
+
+//Users (multiples of the User type) here is a slice of User
+//this is helpfull for our search function in the contollers that respond with iterative objects
+type Users []User
 
 //Validate method style
 func (user *User) Validate() *errors.RestErr {
@@ -25,6 +34,12 @@ func (user *User) Validate() *errors.RestErr {
 	if user.Email == "" {
 		return errors.NewBadRequest("invalid email addres")
 	}
+
+	user.Password = strings.TrimSpace(user.Password)
+	if user.Password == "" {
+		return errors.NewBadRequest("INVALID PASSWORD")
+	}
+
 	return nil
 }
 

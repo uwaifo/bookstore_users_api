@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/uwaifo/bookstore_users_api/domain/users"
+	"github.com/uwaifo/bookstore_users_api/utils"
 	"github.com/uwaifo/bookstore_users_api/utils/errors"
 )
 
@@ -12,7 +13,9 @@ func CreateUser(user users.User) (*users.User, *errors.RestErr) {
 	}
 
 	//after the validatio we can now save the user
-	//
+	user.DateCreated = utils.GetNowDBFormat()
+	user.Status = users.StatusActive
+	user.Password = utils.GetMd5(user.Password)
 	if err := user.Save(); err != nil {
 		return nil, err
 	}
@@ -77,5 +80,12 @@ func UpdateUser(isPartial bool, user users.User) (*users.User, *errors.RestErr) 
 func DeleteUser(userIDParam int64) *errors.RestErr {
 	currentUser := &users.User{ID: userIDParam}
 	return currentUser.Delete()
+
+}
+
+//Search  . . .
+func Search(status string) (users.Users, *errors.RestErr) {
+	dao := &users.User{}
+	return dao.FindByStatus(status)
 
 }
