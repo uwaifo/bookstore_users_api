@@ -6,8 +6,24 @@ import (
 	"github.com/uwaifo/bookstore_users_api/utils/errors"
 )
 
+//
+var (
+	UserService userServiceInterface = &userService{}
+)
+
+type userService struct {
+}
+
+type userServiceInterface interface {
+	CreateUser(users.User) (*users.User, *errors.RestErr)
+	GetUser(int64) (*users.User, *errors.RestErr)
+	UpdateUser(bool, users.User) (*users.User, *errors.RestErr)
+	DeleteUser(int64) *errors.RestErr
+	Search(string) (users.Users, *errors.RestErr)
+}
+
 //CreateUser . . .
-func CreateUser(user users.User) (*users.User, *errors.RestErr) {
+func (s *userService) CreateUser(user users.User) (*users.User, *errors.RestErr) {
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
@@ -24,7 +40,7 @@ func CreateUser(user users.User) (*users.User, *errors.RestErr) {
 }
 
 //GetUser . . . .
-func GetUser(userID int64) (*users.User, *errors.RestErr) {
+func (s *userService) GetUser(userID int64) (*users.User, *errors.RestErr) {
 	// at this point we are certain that the argumat is an int 64 so i commnt the block
 	/*
 		if userID <= 0 {
@@ -41,8 +57,8 @@ func GetUser(userID int64) (*users.User, *errors.RestErr) {
 }
 
 //UpdateUser . . . .
-func UpdateUser(isPartial bool, user users.User) (*users.User, *errors.RestErr) {
-	currentUser, err := GetUser(user.ID)
+func (s *userService) UpdateUser(isPartial bool, user users.User) (*users.User, *errors.RestErr) {
+	currentUser, err := UserService.GetUser(user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -77,14 +93,14 @@ func UpdateUser(isPartial bool, user users.User) (*users.User, *errors.RestErr) 
 }
 
 //DeleteUser / / /
-func DeleteUser(userIDParam int64) *errors.RestErr {
+func (s *userService) DeleteUser(userIDParam int64) *errors.RestErr {
 	currentUser := &users.User{ID: userIDParam}
 	return currentUser.Delete()
 
 }
 
 //Search  . . .
-func Search(status string) (users.Users, *errors.RestErr) {
+func (s *userService) Search(status string) (users.Users, *errors.RestErr) {
 	dao := &users.User{}
 	return dao.FindByStatus(status)
 

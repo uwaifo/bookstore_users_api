@@ -3,9 +3,9 @@ package users
 import (
 	"fmt"
 	//"errors"
-	"strings"
 
 	"github.com/uwaifo/bookstore_users_api/datasource/mysql/usersdb"
+	"github.com/uwaifo/bookstore_users_api/logger"
 	"github.com/uwaifo/bookstore_users_api/utils/errors"
 )
 
@@ -31,19 +31,26 @@ const (
 func (user *User) Get() *errors.RestErr {
 	stmt, err := usersdb.Client.Prepare(queryGetUser)
 	if err != nil {
-		return errors.NewInternalServerError(err.Error())
+		logger.Error("error when trying to prepaire get user statment", err)
+		return errors.NewInternalServerError("database error")
 	}
 	defer stmt.Close()
 
 	result := stmt.QueryRow(user.ID)
+
 	if err := result.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated); err != nil {
+		logger.Error("error attempting to get user by id", err)
+		return errors.NewInternalServerError("database error")
 		//fmt.Println(err)
+		/*UNSURE
 		if strings.Contains(err.Error(), errorNoRows) {
 			return errors.NewNotFoundError(fmt.Sprintf("user %d not found", user.ID))
 
 		}
+
 		return errors.NewInternalServerError(
 			fmt.Sprintf("error attempting to get user %d: %s", user.ID, err.Error()))
+		*/
 	}
 
 	return nil
